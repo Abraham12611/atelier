@@ -1,4 +1,4 @@
-import { createDecisions, storedGeminiKey, type Question } from "../llm/decisions.ts"
+import { createDecisions, storedGeminiKey, type Question } from "../llm/provider.ts"
 import type { RelevanceSource } from "./keyword-relevance.ts"
 
 const MODEL = "gemini-decision-1"

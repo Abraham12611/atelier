@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Atelier — a playful writing canvas</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕹️</text></svg>" />
+    <title>Atelier: a playful writing canvas</title>
+    <link rel="icon" type="image/svg+xml" href="/art/spark.svg" />
     <style>
       @property --fill {
         syntax: "<number>";
@@ -850,24 +850,19 @@
     </style>
     <link rel="stylesheet" href="/src/studio-theme.css" />
   </head>
-  <body>
+  <body data-stage="spark">
     <header class="studio-header">
-      <div class="studio-identity">
-        <span class="studio-logo" aria-hidden="true"></span>
-        <div><h1 class="studio-name">atelier<span>.</span></h1>
-          <div class="studio-kicker">a playful writing canvas</div></div>
-      </div>
+      <a class="studio-brand" href="/" aria-label="Atelier home"><img src="/art/logo.svg" alt="atelier" /></a>
       <div class="studio-header-side">
-        <span class="studio-edition">creative experiment</span>
-        <a class="studio-credit" href="https://github.com/chuanqisun/spaceship" target="_blank" rel="noopener noreferrer">Built on Spaceship</a>
+        <span class="studio-edition">a playful writing canvas</span>
+        <a class="studio-credit" href="https://github.com/chuanqisun/spaceship" target="_blank" rel="noopener noreferrer">built on Spaceship</a>
       </div>
     </header>
-    <aside class="studio-guide" aria-label="Canvas gestures">
-      <div class="guide-label">Make it yours</div>
-      <p><b>Move the pink handle</b> to reveal your story, one word at a time.</p>
-      <p><b>Double-click</b> it to see what the story is thinking about.</p>
-      <p><b>Double-click and hold</b> to open the creative steering palette.</p>
-      <p class="guide-tip">Play. Rewind. Change what happens next. ✳</p>
+    <aside class="studio-guide" aria-label="How to play">
+      <div class="guide-label"><img src="/art/spark.svg" alt="" />How to play</div>
+      <p><i data-k="drag"></i><span><b>Drag the ball</b> forward and back. Words appear and vanish the instant you move.</span></p>
+      <p><i data-k="dbl"></i><span><b>Double-click</b> it to see what the story is leaning on. Lock a phrase to make it count.</span></p>
+      <p><i data-k="hold"></i><span><b>Double-click and hold</b> to open the steering wheel: tone, pace, tension, focus.</span></p>
     </aside>
     <div id="rail" aria-hidden="true"></div>
     <div id="text"></div>
@@ -882,59 +877,41 @@
       id="pointer"
       class="knob"
       type="button"
-      aria-label="drag to scrub the text forward or back, double click to expand attention highlights or remove everything attached, double click and hold to open the fan menu"
+      aria-label="the ball: drag to reveal or erase the story, double click to open the focus monitor and attention locks, double click and hold to open the steering wheel"
     ></button>
     <template id="future-knob">
-      <button class="knob future" type="button" aria-label="future knob, …, double click to delete"><span>…</span></button>
+      <button class="knob future" type="button" aria-label="steering knob, choosing, double click to delete"><span>…</span></button>
     </template>
     <div id="cursor" aria-hidden="true"></div>
+    <div id="toast" role="status" aria-live="polite"></div>
     <footer id="tray">
-      <button id="mode-toggle" type="button" aria-pressed="false" aria-label="flight mode">mode<b>sim</b></button>
+      <button id="mode-toggle" type="button" aria-pressed="true" aria-label="model mode">mode<b>live</b></button>
       <output id="status" aria-live="off"></output>
       <button id="sound-toggle" type="button" aria-pressed="true" aria-label="sound">♪<b>on</b></button>
-      <a id="extra-link" href="https://chuanqisun.github.io/spaceship/extra/style-1.html" target="_blank" rel="noopener noreferrer">studies</a>
+      <button id="new-story" type="button">new story</button>
     </footer>
-    <dialog id="live-keys" aria-labelledby="live-keys-title" aria-describedby="live-keys-note" closedby="closerequest">
-      <form method="dialog" autocomplete="off">
-        <h2 id="live-keys-title">Create with a live model</h2>
-        <p id="live-keys-note">Enable the original live mode with your Cerebras and Gemini API keys. Keys are stored in this browser; the APIs receive your story content.</p>
-        <label
-          >cerebras
-          <input
-            name="cerebras"
-            type="text"
-            required
-            autocomplete="off"
-            autocapitalize="off"
-            autocorrect="off"
-            spellcheck="false"
-            data-1p-ignore
-            data-lpignore="true"
-            data-bwignore
-            data-form-type="other"
-            autofocus
-        /></label>
-        <label
-          >gemini
-          <input
-            name="gemini"
-            type="text"
-            required
-            autocomplete="off"
-            autocapitalize="off"
-            autocorrect="off"
-            spellcheck="false"
-            data-1p-ignore
-            data-lpignore="true"
-            data-bwignore
-            data-form-type="other"
-        /></label>
-        <p class="actions">
-          <button type="button" command="close" commandfor="live-keys">Cancel</button>
-          <button value="live">Start writing</button>
-        </p>
-      </form>
-    </dialog>
+    <section id="spark" aria-labelledby="spark-title">
+      <div class="spark-card">
+        <img class="spark-mascot" src="/art/mascot.png" alt="Inky, the ink-drop mascot" />
+        <div class="spark-form">
+          <h2 id="spark-title">Light the spark</h2>
+          <p class="spark-lede">Tell Inky what to write. Then drag the ball and the story pours out as fast as you move.</p>
+          <label class="spark-field"
+            ><span>Your idea</span>
+            <textarea id="spark-idea" rows="3" maxlength="280" placeholder="A lighthouse keeper discovers the light has been answering someone out at sea..."></textarea>
+          </label>
+          <div class="spark-field">
+            <span>Stir in up to three ingredients</span>
+            <div id="spark-chips" class="spark-chips"></div>
+          </div>
+          <div class="spark-actions">
+            <button id="spark-surprise" type="button" class="ghost">🎲 Surprise me</button>
+            <button id="spark-go" type="button" class="primary">Begin the story</button>
+          </div>
+          <p class="spark-hint">Ctrl + Enter to begin</p>
+        </div>
+      </div>
+    </section>
     <script type="module" src="/src/text/main.ts"></script>
   </body>
 </html>

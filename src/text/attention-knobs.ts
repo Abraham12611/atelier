@@ -48,6 +48,10 @@ export function createAttentionKnobs({ source, textElement, knob, linkPath, acti
   let shown: AttentionGeneration | undefined
   /** The pointer's latest page x over the text, where box sounds come from. */
   let pointerX = 0
+  /** A lock on each box's keyword: the box is the writer's hold on what the story must keep in mind, and clicking the lock lets go. */
+  const locks = Object.assign(document.createElement("div"), { id: "locks" })
+  const lockedBefore = new WeakSet<AttentionBox>()
+  document.body.append(locks)
 
   makeDraggable(textElement, { onStart: grab, onDrag: moveGrabbed, onDrop: dropGrabbed })
   textElement.addEventListener("mousedown", (event) => {
@@ -255,6 +259,23 @@ export function createAttentionKnobs({ source, textElement, knob, linkPath, acti
     CSS.highlights.set(ACTIVE_KEYWORD_HIGHLIGHT, keywords(focused))
     linkPath.setAttribute("d", linksOf(others))
     activeLinkPath.setAttribute("d", linksOf(focused))
+    paintLocks()
+  }
+
+  function paintLocks() {
+    locks.replaceChildren(
+      ...boxes.map((box) => {
+        const { right, top } = pageRect(rangeOf(box.keyword, box.keyword).getBoundingClientRect())
+        const lock = Object.assign(document.createElement("button"), { type: "button", className: "lock", title: "Unlock: let this phrase go" })
+        lock.setAttribute("aria-label", "unlock this attention box")
+        lock.toggleAttribute("data-active", box === active || box === grabbed)
+        lock.toggleAttribute("data-new", !lockedBefore.has(box))
+        lockedBefore.add(box)
+        lock.style.translate = `${right - 7}px ${top - 13}px`
+        lock.addEventListener("click", () => deleteBox(boxes.indexOf(box)) && sounds.remove(right))
+        return lock
+      }),
+    )
   }
 
   /** Links each keyword's underline end closer to the knob. */

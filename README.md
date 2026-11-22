@@ -1,36 +1,38 @@
-# Atelier — a playful writing canvas
+# Atelier
 
-Atelier is a warm, colorful editorial reskin of [Spaceship IDE](https://github.com/chuanqisun/spaceship), retaining the original real-time text interaction engine.
+A dark, playful writing canvas where you steer an AI story in real time. Drag the ball forward and the story appears word by word; drag it back and it vanishes. Built on [Spaceship](https://github.com/chuanqisun/spaceship) by chuanqisun (MIT). The streaming, attention, steering and realization engine is upstream's; Atelier is a new skin, a new way to begin, and a radial steering wheel.
 
-## Run locally
+## What is different from Spaceship
+
+- **Light the spark.** A story starts from you: write an idea and stir in up to three ingredients (Mystery, Wonder, Eerie...), or press "Surprise me". The model writes from that premise and the ink flows in under the ball.
+- **Steering wheel.** Double-click and hold the ball to open a half-wheel radial menu. Each wedge is a dimension the model proposes for *this* story (tone, pace, tension, focus, mode...) with its own illustration and colour. Carry the knob through the gate to pick one; its sub-menu is the outer ring: segments for a choice, a filling track for a scale. Distance from the ball sets strength.
+- **Attention Lock.** Double-click the ball to see which phrases the next words lean on. Each gets a golden lock; click a lock to let it go, drag a box to move it, select text to add one.
+- **Focus Monitor.** The rail beside the text shows, per line, how strongly it connects to the focus, and ranks each locked keyword by relevance.
+- **Art.** Logo, steering icons and mascot were generated with fal (Recraft V4.1 Pro Vector for vectors; GPT Image 2.6 Sunburst for the mascot and the ball). They live in `public/art`.
+
+## Run it
 
 ```bash
-npm ci
-npm run dev
+npm install
+# put your key in .env.local (git-ignored):  OPENROUTER_API_KEY=...
+npm run dev      # http://localhost:5199
+npm run build
 ```
 
-Open the URL printed by Vite. Use `npm run build` to build the static app, and `npm run preview` to inspect the build.
+`?sim=true` plays the offline simulator (lorem ipsum) instead of the models.
 
-## Controls
+## Temporary: OpenRouter test backend
 
-- Drag the pink main handle to reveal words, or rewind to regenerate a different future.
-- Double-click the main handle to open or close attention highlights.
-- Double-click and hold to create a future-steering control using the original radial fan.
-- Select text to create or move attention highlights.
-- Use **sim** to experiment without API keys; **flight** uses the original Cerebras and Gemini integrations.
+While the Cerebras integration is pending, text comes from a cheap OpenRouter model (`google/gemini-2.5-flash-lite`, override with `OPENROUTER_MODEL`) through a same-origin proxy, `api/llm.js`, so the key stays on the server (`OPENROUTER_API_KEY`). The yes/no and score questions that upstream sends to Gemini's decisions API are answered by the same model as JSON.
 
-## What is and is not included
+**To remove OpenRouter when Cerebras lands:**
 
-This is **phase 1: a visual reskin**, not the proposed ELSEWISE product. The existing text generation, attention, future steering, speculative buffering, audio and realization tracking remain unchanged.
+1. In `src/llm/provider.ts`, re-export from `./cerebras.ts` and `./decisions.ts` instead of `./openrouter.ts`.
+2. Delete `src/llm/openrouter.ts` and `api/llm.js`.
+3. In `vite.config.ts`, delete the `dev-llm-proxy` plugin and the `loadEnv` line.
+4. Remove `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` from the Vercel project and `.env.local`, and rotate the key.
+5. Delete the "Temporary" section above.
 
-**Hackathon eligibility:** This version does **not** integrate the OpenClaw harness or Kimi K3.1 Pro, and therefore does not meet the Cerebras × Kimi hackathon eligibility requirements on its own. Existing flight mode calls Cerebras GPT-OSS-120B and Gemini.
+## License
 
-## Deployment
-
-The Vite build uses relative asset URLs, suitable for a project subpath such as GitHub Pages and for typical static hosts. The deployment workflow is configured for the `main` branch; GitHub Pages must be enabled in repository settings to publish.
-
-## Origin and license
-
-Built on [Spaceship IDE by Chuanqi Sun](https://github.com/chuanqisun/spaceship). The underlying code is distributed under the MIT License; see the complete retained [LICENSE](LICENSE) with the original copyright notice.
-
-The visual styling and Atelier branding are the customizations in this repository. Development of ELSEWISE is deferred to a separate phase.
+Derived from Spaceship (MIT). The upstream `LICENSE` and copyright notice are kept in this repository.

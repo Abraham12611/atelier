@@ -6,6 +6,7 @@ import { axisFor, visibleViewport } from "./fan-axis.ts"
 import { GRADUATIONS, hudNodesOf, NUMBERED_EVERY, RULER_STEPS, STRENGTH_RANGE_PX, SWING_RADIANS, type ReadoutPart } from "./future-hud.ts"
 import { circleOf, linkBetween, pathOf } from "./links.ts"
 import { placeInRightMargin } from "./margin-pins.ts"
+import { dimensionStyle, iconUrl } from "./palette.ts"
 import type { RealizationSource } from "./realization.ts"
 import { createRealizationTracker, type Tracking } from "./realization-tracker.ts"
 import type { Span } from "./segments.ts"
@@ -524,6 +525,13 @@ export function createFutureKnobs({
     element.toggleAttribute("data-dragging", knob.isDragging)
     element.toggleAttribute("data-loading", !dimension && !knob.menu)
     element.toggleAttribute("data-tuned", dimension !== undefined)
+    if (dimension) {
+      element.style.setProperty("--c", dimensionStyle(dimension.name).color)
+      element.style.setProperty("--icon", `url(${iconUrl(dimension.name)})`)
+    } else {
+      element.style.removeProperty("--c")
+      element.style.removeProperty("--icon")
+    }
     if (!dimension) {
       element.style.setProperty("--fill", `${knob.progress}`)
       labelWith(knob.label, PENDING_VALUE)
@@ -546,7 +554,7 @@ export function createFutureKnobs({
 
   function viewOf(knob: FutureKnob) {
     if (knob.dimension) return { phase: "tuning" as const, dimension: knob.dimension, swing: clampedSwingOf(knob) }
-    return { phase: "choosing" as const, names: knob.menu?.map(({ name }) => name) ?? [], candidate: knob.candidate }
+    return { phase: "choosing" as const, names: knob.menu?.map(({ name }) => name) ?? [], candidate: knob.candidate, progress: knob.progress }
   }
 
   function labelOf(knob: FutureKnob, dimension: Dimension) {

@@ -31,3 +31,5 @@ token-usage.log
 
 # written by scripts/capture
 .capture
+.vercel
+.env*

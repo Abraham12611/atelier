@@ -1,11 +1,13 @@
-import { storedApiKey, streamCompletion } from "../llm/cerebras.ts"
-import { STORY_OPENINGS } from "../story/openings.ts"
+import { storedApiKey, streamCompletion } from "../llm/provider.ts"
+import { getPremise, premiseBlock } from "../story/premise.ts"
 import { STORY_MAX_WORDS, STORY_REQUEST } from "../story/prompt.ts"
 import { strengthLevelOf, valueOf, type Control } from "./dimension.ts"
 import type { Steering, TextSource } from "./text-stream.ts"
 import { countWords } from "./words.ts"
 
-const STEERED_SYSTEM_PROMPT = `Continue the story. The user message may list KEY PHRASES and CONTROLS, then the story so far, which may stop mid-sentence.
+const STEERED_SYSTEM_PROMPT = `Continue the story. The user message may give the writer's PREMISE, then KEY PHRASES and CONTROLS, then the story so far, which may stop mid-sentence.
+
+- The PREMISE is what the writer asked for: its idea and ingredients (moods and genres). Keep every passage faithful to it. When the story so far is empty, write the story's opening: set the scene and a character in the first sentences, and begin mid-action rather than with a summary.
 
 - Output only the words that come next. Your first word directly follows the story's last word: if the story stops mid-sentence, finish that sentence first. Never repeat or restart any of the story so far, not even its last word: after "…the door was still" write "locked, and…", never "still locked" or "The door was still locked".
 - Key phrases lead what happens next: build the continuation on them, most of all on the [bracketed] words.
@@ -31,24 +33,15 @@ const MAX_ECHO_WORDS = 6
 
 const STEERED_REQUEST = { ...STORY_REQUEST, system: STEERED_SYSTEM_PROMPT }
 
-export const liveSource: TextSource = { expand: expandToStoryStart, complete: completeStory }
-
-/** Picks a random story opening that begins with the same words as `text`. */
-function expandToStoryStart(text: string) {
-  const words = text.match(/\S+/g) ?? []
-  const candidates = STORY_OPENINGS.filter((start) => {
-    const startWords = start.split(/\s+/)
-    return startWords.length >= words.length && words.every((word, i) => word === startWords[i])
-  })
-  return candidates[Math.floor(Math.random() * candidates.length)] ?? text
-}
+export const liveSource: TextSource = { complete: completeStory }
 
 async function* completeStory(prefix: string, steering: Steering, signal: AbortSignal) {
   const apiKey = storedApiKey()
   if (!apiKey) throw new Error("save an API key first")
 
-  const isSteered = steering.leads.length > 0 || steering.controls.length > 0
-  const request = isSteered ? { ...STEERED_REQUEST, user: steeredUserMessage(prefix, steering) } : { ...STORY_REQUEST, user: prefix }
+  const premise = getPremise()
+  const isSteered = steering.leads.length > 0 || steering.controls.length > 0 || premise !== undefined
+  const request = isSteered ? { ...STEERED_REQUEST, user: steeredUserMessage(prefix, steering, premise && premiseBlock(premise)) } : { ...STORY_REQUEST, user: prefix }
   let head: string | undefined = ""
   for await (const delta of streamCompletion({ ...request, apiKey, signal })) {
     if (head === undefined) {
@@ -57,11 +50,11 @@ async function* completeStory(prefix: string, steering: Steering, signal: AbortS
     }
     head += delta
     if (countWords(head) <= MAX_ECHO_WORDS) continue
-    yield ` ${withoutEcho(prefix, head)}`
+    yield joined(prefix, withoutEcho(prefix, head))
     head = undefined
   }
   const rest = head && withoutEcho(prefix, head)
-  if (rest) yield ` ${rest}`
+  if (rest) yield joined(prefix, rest)
 }
 
 /** Drops the leading words of `head` that repeat the last words of `prefix`, which the model sometimes echoes before it continues. */
@@ -81,11 +74,12 @@ function bareWord(word: string) {
 }
 
 /** Empty blocks are left out, header included. */
-function steeredUserMessage(prefix: string, { leads, controls }: Steering) {
+function steeredUserMessage(prefix: string, { leads, controls }: Steering, premise?: string) {
   const blocks = [
+    ["PREMISE", premise ? [premise] : []],
     ["KEY PHRASES", leads.map(({ before, keyword, after }) => `${before}[${keyword}]${after}`)],
     ["CONTROLS", controls.map(controlLine)],
-    ["STORY SO FAR", [prefix]],
+    ["STORY SO FAR", [prefix || "(empty: write the opening)"]],
   ] as const
   return blocks
     .filter(([, lines]) => lines.length)
@@ -96,4 +90,9 @@ function steeredUserMessage(prefix: string, { leads, controls }: Steering) {
 function controlLine({ dimension, position, strength }: Control) {
   const options = dimension.kind === "choice" ? ` (options: ${dimension.options.join(", ")})` : ""
   return `${dimension.name}: ${valueOf({ dimension, position })}${options} (${strengthLevelOf(strength)})`
+}
+
+/** Text joins the story with one space, except the very first words. */
+function joined(prefix: string, words: string) {
+  return prefix.trim() ? ` ` : words
 }

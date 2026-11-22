@@ -1,5 +1,6 @@
 import { layoutNextLine, prepareWithSegments, type PreparedTextWithSegments } from "@chenglou/pretext"
-import "@fontsource-variable/jetbrains-mono/wght.css"
+import "@fontsource-variable/nunito/wght.css"
+import "@fontsource-variable/fredoka/wght.css"
 import { $ } from "../dom.ts"
 import { centeredAt, type Point } from "../point.ts"
 import { createAttentionKnobs } from "./attention-knobs.ts"
@@ -17,11 +18,13 @@ import { liveAttention } from "./live-attention.ts"
 import { liveSource } from "./live-completion.ts"
 import { liveDimension } from "./live-dimension.ts"
 import { liveInfluence } from "./live-influence.ts"
-import { bindModeToggle } from "./live-mode.ts"
+import { bindModeToggle, isLiveMode } from "./live-mode.ts"
 import { liveRealization } from "./live-realization.ts"
 import { liveRelevance } from "./live-relevance.ts"
 import { createPointer, type Aim, type PointerTarget, type SelectionPreview, type Zone } from "./pointer.ts"
 import { wordSpans, type Span } from "./segments.ts"
+import { lightTheSpark } from "./spark.ts"
+import { setPremise } from "../story/premise.ts"
 import { simulatedAttention } from "./simulated-attention.ts"
 import { simulatedDimension } from "./simulated-dimension.ts"
 import { simulatedInfluence } from "./simulated-influence.ts"
@@ -56,7 +59,8 @@ const handle = $<HTMLButtonElement>("#pointer")
 const statusElement = $("#status")
 const soundToggle = $<HTMLButtonElement>("#sound-toggle")
 const modeToggle = $<HTMLButtonElement>("#mode-toggle")
-const extraLink = $<HTMLAnchorElement>("#extra-link")
+const newStory = $<HTMLButtonElement>("#new-story")
+const toast = $("#toast")
 const railElement = $("#rail")
 const style = getComputedStyle(element)
 await document.fonts.load(style.font)
@@ -64,7 +68,7 @@ await document.fonts.load(style.font)
 const measure = document.createElement("canvas").getContext("2d")!
 measure.font = style.font
 
-const isLive = new URLSearchParams(location.search).get("live") === "true"
+const isLive = isLiveMode()
 const stream = createTextStream(isLive ? liveSource : simulatedSource, render)
 const rail = createLeftRail(railElement)
 const connections = createConnections({ source: isLive ? liveInfluence : simulatedInfluence, onChange: refreshRail })
@@ -119,7 +123,11 @@ let didHold = false
 /** The previous drag point, for how fast the knob moves. */
 let lastDrag: { point: Point; at: number } | undefined
 
-bindModeToggle(modeToggle, $<HTMLDialogElement>("#live-keys"), isLive)
+bindModeToggle(modeToggle, isLive)
+newStory.addEventListener("click", () => location.reload())
+/** Nothing is generated until the writer has lit the spark. */
+let isBegun = false
+lightTheSpark().then(begin)
 startSound()
 showSoundToggle()
 soundToggle.addEventListener("click", () => {
@@ -285,6 +293,7 @@ function afterStreaming(request: () => void) {
 }
 
 function regenerateFuture() {
+  if (!isBegun) return
   isFutureStale = false
   restCount = shownCount ?? 0
   stream.regenerate(shownCount ?? 0, "steering changed", steering())
@@ -306,12 +315,12 @@ function scheduleTopUp() {
 }
 
 function topUp() {
-  if (isRegenerationHeld || stream.activity().isGenerating || performance.now() < retryAt) return
+  if (!isBegun || isRegenerationHeld || stream.activity().isGenerating || performance.now() < retryAt) return
   const words = countWords(stream.text)
   if (words - (shownCount ?? 0) >= BUFFER_WORDS) return
   stream.generate("buffer low", steering()).then(
     (outcome) => outcome === "done" && settleTopUp(words),
-    (error) => (console.error(error), settleTopUp(words)),
+    (error) => (console.error(error), say(`The model did not answer (${error instanceof Error ? error.message.slice(0, 80) : error}). Retrying...`), settleTopUp(words)),
   )
 }
 
@@ -349,7 +358,7 @@ function pointerTargets(): PointerTarget[] {
     })),
     { rects: [modeToggle.getBoundingClientRect()], pad: TRAY_PAD_PX, isHotOnHover: true, wake: modeToggle },
     { rects: [soundToggle.getBoundingClientRect()], pad: TRAY_PAD_PX, isHotOnHover: true, wake: soundToggle },
-    { rects: [extraLink.getBoundingClientRect()], pad: TRAY_PAD_PX, isHotOnHover: true, wake: extraLink },
+    { rects: [newStory.getBoundingClientRect()], pad: TRAY_PAD_PX, isHotOnHover: true, wake: newStory },
   ]
 }
 
@@ -512,4 +521,27 @@ function showSoundToggle() {
 function metricsOf(): TextMetrics {
   const { left, top } = element.getBoundingClientRect()
   return { left: left + scrollX, top: top + scrollY + parseFloat(style.paddingTop), lineHeight: parseFloat(style.lineHeight) }
+}
+
+/** The writer lit the spark: the story is now asked for, and the ink flows in under the ball so the first words appear without a drag. */
+async function begin(premise: Parameters<typeof setPremise>[0]) {
+  setPremise(premise)
+  isBegun = true
+  scheduleTopUp()
+  const startedAt = performance.now()
+  while (countWords(stream.text) < 6 && performance.now() - startedAt < 30000) await new Promise((resolve) => setTimeout(resolve, 80))
+  for (let i = 0; i < 34 && countWords(stream.text) > (shownCount ?? 0); i++) {
+    if (handle.hasAttribute("data-dragging")) return
+    pullToward(0, 0, 1)
+    await new Promise((resolve) => setTimeout(resolve, 55))
+  }
+}
+
+let toastTimer: number | undefined
+/** A short message for things the writer should know, such as the model not answering. */
+function say(message: string) {
+  toast.textContent = message
+  toast.toggleAttribute("data-shown", true)
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => toast.removeAttribute("data-shown"), 5000)
 }
