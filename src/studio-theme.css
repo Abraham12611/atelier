@@ -1,8 +1,4 @@
-/*
- * Atelier: a dark, playful skin for Spaceship (https://github.com/chuanqisun/spaceship, MIT).
- * Styling only; the streaming, attention, steering and realization logic is the upstream engine.
- * Keep the upstream LICENSE and copyright notice when distributing derivatives.
- */
+/* Atelier: dark, playful interface theme. Styling only. */
 
 :root {
   color-scheme: dark;
