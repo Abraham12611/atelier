@@ -26,28 +26,20 @@ Double-click and hold the ball to open the steering wheel, a radial menu with su
 ### Realization check
 As the text arrives, a scorer reads each new sentence against each steering knob. When a sentence clearly delivers a knob's setting, the knob pins beside it in the margin, so you can see which sentence realized which vector.
 
+## Inference
+
+Generation, attention, steering and scoring calls go through a same-origin proxy (`api/llm.js`), so API keys stay on the server and never reach the browser. The model is chosen by environment variable.
+
 ## Run it
 
 ```bash
 npm install
-# put your key in .env.local (git-ignored):  OPENROUTER_API_KEY=...
-npm run dev      # http://localhost:5199
+# put your inference API key in .env.local (git-ignored); see api/llm.js for the variable names
+npm run dev
 npm run build
 ```
 
 `?sim=true` plays an offline simulator instead of the models.
-
-## Temporary: OpenRouter test backend
-
-While the Cerebras integration is pending, text comes from a small, cheap OpenRouter model (`google/gemini-2.5-flash-lite`, override with `OPENROUTER_MODEL`) through a same-origin proxy, `api/llm.js`, so the key stays on the server (`OPENROUTER_API_KEY`). The yes/no and score questions are answered by the same model as JSON.
-
-**To remove OpenRouter when Cerebras lands:**
-
-1. In `src/llm/provider.ts`, re-export from `./cerebras.ts` and `./decisions.ts` instead of `./openrouter.ts`.
-2. Delete `src/llm/openrouter.ts` and `api/llm.js`.
-3. In `vite.config.ts`, delete the `dev-llm-proxy` plugin and the `loadEnv` line.
-4. Remove `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` from the Vercel project and `.env.local`, and rotate the key.
-5. Delete this section.
 
 ## License
 
