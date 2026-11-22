@@ -26,9 +26,6 @@ Double-click and hold the ball to open the steering wheel, a radial menu with su
 ### Realization check
 As the text arrives, a scorer reads each new sentence against each steering knob. When a sentence clearly delivers a knob's setting, the knob pins beside it in the margin, so you can see which sentence realized which vector.
 
-## Inference
-
-Generation, attention, steering and scoring calls go through a same-origin proxy (`api/llm.js`), so API keys stay on the server and never reach the browser. The model is chosen by environment variable.
 
 ## Run it
 
@@ -41,6 +38,4 @@ npm run build
 
 `?sim=true` plays an offline simulator instead of the models.
 
-## License
 
-Derived from Spaceship (MIT). The upstream `LICENSE` and copyright notice are kept in this repository.
