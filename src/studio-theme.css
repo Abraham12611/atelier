@@ -1,0 +1,282 @@
+/*
+ * Atelier — an artistic visual layer for Spaceship.
+ * Original engine: https://github.com/chuanqisun/spaceship (MIT).
+ * All application behavior and upstream copyright notices are preserved.
+ */
+:root {
+  color-scheme: light;
+  --bg:#faf7f1; --ink:#332b40;
+  --ink-2:rgb(51 43 64/.75); --ink-3:rgb(51 43 64/.55);
+  --ink-4:rgb(51 43 64/.30); --ink-5:rgb(51 43 64/.11);
+  --hot:#d96a79; --hot-wash:rgb(224 136 152/.26);
+  --attention:rgb(229 198 237/.30);
+  --text-size:17px; --line:31px; --hud-size:11px;
+  --hud-line:19px; --numeral-size:10px; --tray-height:34px;
+  --padding:32px; --margin:18ch; --rail-width:168px;
+  --knob:22px; --knob-future:19px; --gap:10px;
+  --hair:1px; --stroke:2px; --selected-stroke:3px;
+  --dash:3 4; --dimmed:.38;
+  --pin:600ms cubic-bezier(.18,.8,.2,1);
+  font-family:"Trebuchet MS","Avenir Next","Segoe UI",sans-serif;
+  background:var(--bg); color:var(--ink);
+}
+body {
+  min-height:100vh; position:relative; overflow-x:clip; padding-bottom:105px;
+  background:
+    radial-gradient(ellipse 460px 360px at 3% 10%,rgb(248 206 186/.20),transparent 80%),
+    radial-gradient(ellipse 480px 430px at 98% 13%,rgb(204 184 245/.17),transparent 80%),
+    radial-gradient(ellipse 380px 400px at 85% 85%,rgb(168 216 194/.13),transparent 80%),
+    #faf7f1;
+}
+.studio-header {
+  position:fixed; inset:0 0 auto; z-index:35;
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  min-height:84px; padding:16px clamp(20px,4.5vw,78px);
+  box-sizing:border-box;
+  background:linear-gradient(180deg,rgb(250 247 241/.96),rgb(250 247 241/.86));
+  border-bottom:1px solid rgb(107 83 92/.10); backdrop-filter:blur(18px);
+}
+.studio-identity { display:flex; align-items:center; gap:14px; }
+.studio-logo {
+  position:relative; display:grid; place-items:center; flex:none;
+  width:40px; height:40px; border:1px solid #e9b8b9;
+  border-radius:13px; background:#ffe7dd; box-shadow:0 3px 0 rgb(220 141 151/.12);
+}
+.studio-logo::before,.studio-logo::after {
+  content:""; position:absolute; border-radius:50%;
+}
+.studio-logo::before { width:22px;height:22px;background:#df8696;left:6px;top:6px; }
+.studio-logo::after {
+  width:17px;height:17px;background:#8f83c8;right:5px;bottom:6px;
+  mix-blend-mode:multiply;
+}
+.studio-name {
+  margin:0; color:#392f43; font:500 28px/1 "Iowan Old Style",Baskerville,Georgia,serif;
+  letter-spacing:-.055em;
+}
+.studio-name span { color:#df7b89; }
+.studio-kicker {
+  margin-top:4px;color:#8f808b;font:10px/1.4 "Trebuchet MS","Segoe UI",sans-serif;
+  letter-spacing:.1em;text-transform:uppercase;
+}
+.studio-header-side { display:flex;gap:20px;align-items:center; }
+.studio-edition {
+  border:1px solid #e7d9e8;border-radius:999px;padding:7px 11px;color:#806e97;
+  background:#f2eaf7;font:600 10px/1 "Trebuchet MS",sans-serif;
+  letter-spacing:.035em;white-space:nowrap;
+}
+.studio-credit {color:#897b86;text-decoration:none;font-size:11px}
+.studio-credit:hover {color:#a45773;text-decoration:underline}
+#text {
+  position:relative;box-sizing:content-box;
+  width:min(58ch,calc(100vw - 440px));
+  min-height:max(380px,calc(100vh - 340px));
+  margin:108px auto 0;padding:101px 0 200px;border:0;border-radius:3px;
+  background:
+    linear-gradient(90deg,transparent calc(100% - 1px),rgb(179 150 144/.09) 0),
+    repeating-linear-gradient(0deg,transparent 0 30px,rgb(202 184 174/.045) 30px 31px),
+    #fffcf8;
+  box-shadow:
+    0 0 0 32px #fffcf8,0 0 0 33px #eee5dc,
+    0 26px 78px 35px rgb(75 55 77/.055),
+    0 2px 10px 33px rgb(71 49 68/.035);
+  color:#3e3345;
+  font:17px/var(--line) "Iowan Old Style",Baskerville,Georgia,serif;
+  letter-spacing:.005em;white-space:pre;text-rendering:optimizeLegibility;
+  text-underline-position:under;touch-action:none;
+}
+/* This decorative paper title is absolutely positioned: it does not change text measurements. */
+#text::before {
+  content:"A STORY IN THE MAKING";position:absolute;top:54px;left:0;
+  font:600 10px/1 "Trebuchet MS",sans-serif;letter-spacing:.18em;
+  color:#b48d91;pointer-events:none;
+}
+#text::after {
+  content:"✦";position:absolute;top:47px;right:0;color:#d8ab71;
+  font:28px/1 Georgia,serif;pointer-events:none;
+}
+#text::selection,#text *::selection {background:#f0c5cc;color:#392f44}
+.studio-guide {
+  position:fixed;right:clamp(20px,4.5vw,78px);top:160px;width:165px;
+  z-index:2;pointer-events:none;color:#867784;
+  font:12px/1.65 "Trebuchet MS","Segoe UI",sans-serif;
+}
+.studio-guide .guide-label {
+  display:flex;gap:7px;align-items:center;color:#b47689;
+  font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:700;
+}
+.studio-guide .guide-label::before {
+  content:"";width:13px;height:2px;background:#d996ab;
+}
+.studio-guide p {margin:12px 0}
+.studio-guide b {color:#5b4d63;font-weight:600}
+.studio-guide .guide-tip {
+  margin-top:16px;padding-top:12px;border-top:1px dashed #ddccd3;
+  font-size:11px;color:#ae93a2;
+}
+/* Analytical rail, now styled as an editorial margin. */
+#rail {font-family:"Trebuchet MS","Segoe UI",sans-serif}
+#rail .row {column-gap:7px}
+#rail .row[data-active] .kw :is(i,b) {color:#b85979}
+#rail .tick {border-color:#e1d8d3}
+#rail .row[data-focus] .tick {border-color:#c87891}
+#rail .meter i {border-radius:2px}
+#rail .meter i[data-on] {background:#bda5cd}
+#rail[data-focus="box"] .meter i[data-on]:not([data-gained],[data-lost]) {background:#a48cbb}
+#rail .meter i[data-gained],#rail .meter i[data-lost] {background:#e98a9b}
+#rail .bracket {border-radius:3px}
+::highlight(attention-word) {text-decoration:underline 2px #a69ad1}
+::highlight(attention-word-active) {text-decoration:underline 2px #d96a79}
+::highlight(pinned-sentence) {text-decoration:underline dotted 2px #b0a5b7}
+::highlight(attention-shade-1),::highlight(attention-shade-2),
+::highlight(attention-shade-3),::highlight(attention-shade-4),
+::highlight(attention-shade-5) {background:rgb(205 177 226/.20)}
+#links > path {stroke:#b9a8b8}
+#links #attention-active-link {stroke:#d96a79}
+#links #future-tuned-link {stroke:#a299c5}
+#future-hud [data-role="backdrop"] {fill:#fffbf7;opacity:.96}
+#future-hud path {stroke:#82758e}
+#future-hud [data-role="ring"] {stroke:#e5d9e6}
+#future-hud [data-role="minor"] {stroke:#d4bcd2}
+#future-hud [data-role="ruler"] {stroke:#b8a7be}
+#future-hud [data-role="selected"] {stroke:#db758b}
+#future-hud circle {fill:#e07a90}
+#future-hud rect[data-plate] {fill:#d96a79}
+#future-hud text {
+  fill:#675a73;stroke:#fffbf7;
+  font-family:"Trebuchet MS","Segoe UI",sans-serif;
+}
+#future-hud text[data-selected] {fill:#fffbf7;stroke:none}
+#future-hud text[data-readout] {fill:#3c324b}
+#future-hud [data-tone="live"] {fill:#d96a79}
+/* Softer enamel knobs retain original buffer and hold state. */
+.knob {
+  border-color:#a588a9;
+  box-shadow:0 2px 7px rgb(97 55 95/.13),0 0 0 3px rgb(255 251 247/.8);
+  transition:opacity var(--fast),border-color var(--settle),box-shadow var(--fast);
+}
+#pointer {
+  --arc:#a99ace;border-width:1.5px;
+  background:
+    radial-gradient(circle closest-side,#fffaf4 3px,transparent 3.5px 6px,#fffaf4 6.5px),
+    conic-gradient(var(--arc) calc(round(up,var(--buffer),1 / 6) * 1turn),#e9dfe9 0);
+}
+#pointer::before {background:#a579a4}
+#pointer::after {border-color:#bfa1be}
+#pointer:hover {
+  box-shadow:0 2px 10px rgb(148 93 142/.23),0 0 0 5px rgb(245 215 226/.40);
+}
+#pointer[data-generating] {--arc:#e38398}
+#pointer[data-generating]::after {border-top-color:#de7b93}
+#pointer[data-holding] {border-color:#db7189}
+#pointer[data-dragging] {border-color:#d96a79;box-shadow:0 0 0 6px rgb(222 127 150/.17)}
+#pointer[data-dragging]::before {background:#d96a79}
+.future {
+  --fill-color:#ab98c7;border-style:solid;border-color:#b7a8c1;
+  background:conic-gradient(var(--fill-color) calc(var(--fill,0) * 1turn),#f3ebf3 0);
+}
+.future > span {
+  padding:4px 7px;border-radius:6px;background:rgb(255 251 247/.94);
+  border:1px solid #eddfeb;box-shadow:0 3px 10px rgb(78 59 87/.05);
+  font:11px/1.4 "Trebuchet MS",sans-serif;color:#77647e;
+}
+.future > span b {color:#9d81aa}
+.future[data-tracking],.future[data-pinned] {--fill-color:#e18595;border-color:#e18595}
+.future[data-tracking] > span b,.future[data-pinned] > span b {color:#c16b80}
+.future[data-dimmed] > span {background:transparent;box-shadow:none;border-color:transparent}
+.future[data-pinned] > span {background:transparent;border-color:transparent;box-shadow:none}
+.future[data-dragging] {border-color:#d96a79}
+/* Floating information palette, still driven by the original live status state. */
+#tray {
+  inset:auto auto 24px 50%;transform:translateX(-50%);
+  width:max-content;max-width:calc(100vw - 20px);
+  height:auto;min-height:34px;padding:7px 12px;
+  border:1px solid #ebdfe4;border-radius:16px;
+  background:rgb(255 251 247/.97);
+  box-shadow:0 14px 45px rgb(102 71 91/.12),0 2px 6px rgb(96 65 80/.05);
+  backdrop-filter:blur(14px);color:#9a8794;
+  font-size:10px;line-height:29px;overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:thin;z-index:60;
+}
+#tray .zone + .zone,#tray [data-field] + [data-field] {border-color:#ebdfe4}
+#tray b {color:#4c3d56;font-weight:700}
+#tray small {color:#a18da0;font-weight:400}
+#tray #status[data-streaming] :is([data-field="rate"] b,[data-field="words"] small) {color:#dc7188}
+#mode-toggle,#sound-toggle,#extra-link {border-color:#ebdfe4;color:#8b6a83}
+#mode-toggle:hover,#sound-toggle:hover,#extra-link:hover {color:#d96a79}
+#mode-toggle {border-color:#ebdfe4}
+#mode-toggle b {color:#9a7bb4}
+#sound-toggle[aria-pressed="false"] {color:#b6a9b1}
+/* Polished live API dialog; the underlying key handling is unchanged. */
+#live-keys {
+  width:min(430px,calc(100vw - 46px));max-width:100%;box-sizing:border-box;
+  padding:29px;border:1px solid #e3d1d8;border-radius:22px;
+  background:#fffbf8;box-shadow:0 36px 110px rgb(59 38 69/.22);
+  color:#3c3146;font:13px/1.65 "Trebuchet MS",sans-serif;
+}
+#live-keys::backdrop {background:rgb(44 29 51/.36);backdrop-filter:blur(7px)}
+#live-keys h2 {font:32px/1.1 "Iowan Old Style",Georgia,serif;letter-spacing:-.04em}
+#live-keys p {color:#847581}
+#live-keys form {gap:17px}
+#live-keys label {grid-template-columns:1fr;gap:6px;font-weight:600;color:#695c69}
+#live-keys input {
+  width:100%;box-sizing:border-box;padding:11px 13px;
+  border:1px solid #e5d6df;border-radius:10px;background:#fff;color:#493d4e;
+  font:13px "Trebuchet MS",sans-serif;
+}
+#live-keys input:focus {border-color:#d96a79;outline:3px solid rgb(217 106 121/.16)}
+#live-keys .actions {gap:9px;margin-top:4px}
+#live-keys .actions button {
+  border:1px solid #e8d9e1;border-radius:9px;background:#f7f0f4;
+  color:#67566b;padding:10px 15px;cursor:pointer;
+}
+#live-keys .actions button[value="live"] {
+  color:#fff;background:#d96a79;border-color:#d96a79;
+}
+/* Original cursor geometry remains, with soft ink colors. */
+#cursor {--line:rgb(124 103 129/.12)}
+#cursor[data-live] {--line:rgb(217 106 121/.22)}
+#cursor .marks .corners {stroke:#a98cad}
+#cursor .marks .contour {stroke:#a98cad;stroke-opacity:.23}
+#cursor .marks .ibeam {stroke:#9a84ac}
+#cursor .marks .tether {stroke:#a991b2}
+#cursor[data-steer="pulling"] .vector {stroke:rgb(217 106 121/.52)}
+#cursor[data-steer="pulling"] .vector-ticks {stroke:#d96a79}
+#cursor .readout {
+  border:1px solid #efe2ed;border-radius:5px;padding:2px 6px;
+  background:#fffbf8;color:#947e94;
+  box-shadow:0 4px 12px rgb(77 55 80/.07);
+}
+@media(max-width:1120px) {
+  .studio-guide {display:none}
+  #text {width:min(58ch,calc(100vw - 330px))}
+}
+@media(max-width:760px) {
+  :root {--margin:7ch;--rail-width:110px;--line:29px;--knob:22px;--knob-future:18px}
+  .studio-header {min-height:72px;padding:13px 18px}
+  .studio-logo {width:32px;height:32px;border-radius:11px}
+  .studio-name {font-size:24px}
+  .studio-kicker {font-size:8px}
+  .studio-edition {display:none}
+  #text {width:min(55ch,calc(100vw - 64px));margin-top:90px;padding:92px 0 170px;font-size:16px}
+  #rail {opacity:.42}
+  #tray {bottom:12px;border-radius:13px;padding:5px 6px}
+}
+@media(max-width:480px) {
+  .studio-credit {font-size:10px;max-width:95px;text-align:right;line-height:1.2}
+  .studio-header-side {gap:4px}
+  #text {
+    width:calc(100vw - 72px);margin-top:84px;padding:85px 0 155px;font-size:15px;
+    box-shadow:0 0 0 16px #fffcf8,0 0 0 17px #eee5dc,0 20px 40px 16px rgb(75 55 77/.04);
+  }
+  #text::before {font-size:9px}
+  #rail {display:none}
+  #tray {font-size:9px;max-width:calc(100vw - 12px)}
+  #tray [data-field] {padding-inline:6px}
+  #mode-toggle,#sound-toggle,#extra-link {padding-inline:6px}
+  .future > span {max-width:100px;overflow-wrap:anywhere}
+}
+@media(prefers-reduced-motion:reduce) {
+  .studio-header,#tray {backdrop-filter:none}
+  .knob {transition-duration:0ms}
+}
