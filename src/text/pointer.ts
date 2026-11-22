@@ -51,6 +51,8 @@ type PointerOptions = {
   aim: (x: number, y: number) => Aim | undefined
   /** Moves the main knob `words` further toward the viewport point. */
   pull: (x: number, y: number, words: number) => void
+  /** Whether the element is page chrome (header, tray, guide, the spark portal): there the OS pointer stays, and the crosshair stays away. */
+  isChrome: (element: Element) => boolean
 }
 
 type Near = { target: PointerTarget; near: number; distance: number; point: Point }
@@ -65,7 +67,7 @@ type Near = { target: PointerTarget; near: number; distance: number; point: Poin
  *   toward the hand word by word, while brackets frame the last word shown, moving forward with it.
  * Orange marks what the hand is changing: a drag, a selection, a pull. The crosshair is drawn straight from each pointer event; everything else once per frame.
  */
-export function createPointer({ layer, targets, isDragging, zoneAt, caretAt, selection, aim, pull }: PointerOptions) {
+export function createPointer({ layer, targets, isDragging, zoneAt, caretAt, selection, aim, pull, isChrome }: PointerOptions) {
   /** It takes over from the OS pointer on the first mouse or pen movement, and steps aside as soon as a touch arrives, so hybrid devices work. */
   const use = (isCustom: boolean) => {
     if (isCustom) document.documentElement.dataset.cursor = "custom"
@@ -96,6 +98,13 @@ export function createPointer({ layer, targets, isDragging, zoneAt, caretAt, sel
 
   addEventListener("pointermove", (event) => {
     if (event.pointerType === "touch") return
+    if (event.target instanceof Element && isChrome(event.target)) {
+      use(false)
+      hand.x = hand.y = -1000
+      layer.style.setProperty("--x", "-1000px")
+      layer.style.setProperty("--y", "-1000px")
+      return schedule()
+    }
     use(true)
     hand.x = event.clientX
     hand.y = event.clientY

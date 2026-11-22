@@ -180,6 +180,7 @@ createPointer({
   selection: selectionPreview,
   aim: aimAt,
   pull: pullToward,
+  isChrome: (element) => element.closest(".studio-header, .studio-guide, #tray, #spark, #toast, .lock") !== null,
 })
 
 addEventListener("resize", () => moveTo(pointAt(caret, metricsOf())))

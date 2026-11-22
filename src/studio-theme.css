@@ -990,3 +990,34 @@ body[data-stage="spark"] :is(#text, #rail, #pointer, #links, .studio-guide, #tra
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Cursors: the OS pointer, in the theme, wherever the crosshair is not drawn (header, tray, guide, the spark portal) ---------- */
+html {
+  cursor:
+    image-set(url("/art/cursor-arrow.png") 1x, url("/art/cursor-arrow@2x.png") 2x) 1 1,
+    auto;
+}
+a,
+button,
+[role="button"],
+label,
+.chip,
+.lock,
+#spark-go,
+#spark-surprise,
+#mode-toggle,
+#sound-toggle,
+#new-story {
+  cursor:
+    image-set(url("/art/cursor-hand.png") 1x, url("/art/cursor-hand@2x.png") 2x) 15 1,
+    pointer;
+}
+textarea,
+input {
+  cursor: text;
+}
+#spark-go:disabled {
+  cursor:
+    image-set(url("/art/cursor-arrow.png") 1x, url("/art/cursor-arrow@2x.png") 2x) 1 1,
+    not-allowed;
+}
