@@ -32,30 +32,30 @@ Tracks the work to turn Atelier from a single-screen demo into a full writing wo
 - [x] Firebase project created (`atelier-writer-app`) and CLI pointed at it
 - [x] Web app registered, config in `.env.local` (git-ignored), `.env.example` has the names
 - [x] Chrome 158 present on this machine (needs 139+)
-- [ ] **Blocked:** enable Google APIs (Firestore, Identity Toolkit, Firebase AI Logic, Generative Language, App Check, Remote Config). `gcloud` is logged in as a different account than the Firebase CLI, so this needs the Firebase account (see log)
-- [ ] Firestore database created
-- [ ] Auth providers enabled (Google, email link, anonymous)
-- [ ] AI Logic enabled (Gemini Developer API), App Check enforced, debug token registered
+- [x] Google APIs enabled (Firestore, Identity Toolkit, Firebase AI Logic, Generative Language, App Check, Remote Config, Hosting, Rules)
+- [x] Firestore database created, rules and index deployed
+- [x] Auth providers enabled (anonymous, email/password). Google sign-in not set up (needs console)
+- [ ] AI Logic: needs the one-time "Get started" in the console (AI Services > AI Logic), then App Check enforcement and a debug token. Deferred: dev uses OpenRouter until the on-device test
 - [ ] Nano model downloaded in this Chrome (`LanguageModel.availability()` is `available`)
 - [ ] One hybrid call works and reports `on_device` or `in_cloud`
 - [ ] Decision recorded here: go, or change approach
 
-## Stage 1: foundation and shell — Fri Nov 27 (morning)
+## Stage 1: foundation and shell — DONE (Nov 26)
 
-- [ ] React + Router + Tiptap added to the Vite app, existing engine kept working
-- [ ] Firebase init (`src/firebase/`), App Check wired
-- [ ] Auth: Google, email link, anonymous "try it"
-- [ ] App shell: sidebar (project tree), top bar, Cmd+K placeholder, offline indicator
-- [ ] Dark design tokens and base components (button, input, menu, dialog, toast)
-- [ ] Firestore security rules (per-user access)
+- [x] React + Router + Tiptap added to the Vite app, existing engine kept working
+- [x] Firebase init (`src/firebase/`). App Check not wired yet (waits on AI Logic setup)
+- [x] Auth: email/password and anonymous "try it" (Google and email link skipped)
+- [x] App shell: sidebar (project tree), top bar, offline indicator. Cmd+K not built yet
+- [x] Dark design tokens and base components (button, input, dialog). Menu and toast not built yet
+- [x] Firestore security rules (per-user access)
 
-## Stage 2: projects and the Write editor — Fri Nov 27 (afternoon)
+## Stage 2: projects and the Write editor — mostly done (Nov 26)
 
-- [ ] Data model: `users/{uid}/projects/{id}/docs/{id}` plus `versions`, `bible`, `presets`
-- [ ] Create, rename, delete (trash) projects and documents
-- [ ] Tiptap editor: headings, lists, quotes, slash menu, markdown shortcuts
-- [ ] Autosave with debounce, offline persistence on, save-state indicator
-- [ ] Home page: continue writing, recent documents, word count
+- [x] Data model: `users/{uid}/projects/{id}/docs/{id}`. `versions`, `bible`, `presets` come with their features
+- [x] Create, rename, archive/delete projects and pages. No trash view yet
+- [x] Tiptap editor with markdown shortcuts (headings, lists, quotes). Slash menu not built
+- [x] Autosave with debounce, offline persistence on, save-state indicator
+- [x] Home page: continue writing, recent documents, word count
 
 ## Stage 3: hybrid AI layer and Flow mode — Sat Nov 28
 
@@ -113,4 +113,5 @@ Tracks the work to turn Atelier from a single-screen demo into a full writing wo
 | Date | Note |
 |---|---|
 | Nov 22 | Plan written. Decisions confirmed |
+| Nov 26 | Stages 1 and 2 built and live at https://atelier-writer-app.web.app (guest and email sign-in, projects, pages, Tiptap editor, autosave, offline cache, recent documents). Next: Stage 3, Flow mode inside the editor and the AI layer, on OpenRouter first |
 | Nov 26 | Firebase project `atelier-writer-app` and web app created. Chrome 158 present. Local `atelier` folder had been emptied; restored from GitHub (`ecd6467`). Plan resized from 8 days to 4. Blocked on enabling Google APIs: `gcloud` is logged in as `imisidahunsi12@gmail.com`, the Firebase CLI as `abraham.dahunsi@gmail.com` |

@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Every user owns exactly their own tree: users/{uid}/...
+    match /users/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    // Recent documents across projects: a collection-group read, still only the owner's own documents.
+    match /{path=**}/docs/{docId} {
+      allow read: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+    // Public read-only copies of documents the owner chose to share.
+    match /shared/{shareId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+  }
+}
