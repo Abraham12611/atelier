@@ -33,3 +33,5 @@ token-usage.log
 .capture
 .vercel
 .env*
+
+.firebase
