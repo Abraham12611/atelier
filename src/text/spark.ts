@@ -8,13 +8,19 @@ const MAX_INGREDIENTS = 3
  * The way a story starts: before any word exists, the writer lights a spark, an idea in their own words plus up to three ingredients.
  * Resolves once they begin; the portal then lifts away to reveal the canvas.
  */
-export function lightTheSpark(): Promise<Premise> {
+export function lightTheSpark({ idea: suggested, auto = false }: { idea?: string; auto?: boolean } = {}): Promise<Premise> {
   const portal = $("#spark")
   const idea = $<HTMLTextAreaElement>("#spark-idea")
   const chips = $("#spark-chips")
   const go = $<HTMLButtonElement>("#spark-go")
   const surprise = $<HTMLButtonElement>("#spark-surprise")
   const picked = new Set<string>()
+  if (suggested) idea.value = suggested
+  if (auto) {
+    portal.setAttribute("hidden", "")
+    document.body.dataset.stage = "writing"
+    return Promise.resolve({ idea: suggested?.trim() || "Continue the story", ingredients: [] })
+  }
 
   chips.replaceChildren(
     ...STORY_INGREDIENTS.map(({ label, emoji }) => {

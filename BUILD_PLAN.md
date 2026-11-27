@@ -35,7 +35,7 @@ Tracks the work to turn Atelier from a single-screen demo into a full writing wo
 - [x] Google APIs enabled (Firestore, Identity Toolkit, Firebase AI Logic, Generative Language, App Check, Remote Config, Hosting, Rules)
 - [x] Firestore database created, rules and index deployed
 - [x] Auth providers enabled (anonymous, email/password). Google sign-in not set up (needs console)
-- [ ] AI Logic: needs the one-time "Get started" in the console (AI Services > AI Logic), then App Check enforcement and a debug token. Deferred: dev uses OpenRouter until the on-device test
+- [x] AI Logic enabled (Gemini Developer API), App Check enforced, debug token registered via CLI (stored in `.env.local`)
 - [ ] Nano model downloaded in this Chrome (`LanguageModel.availability()` is `available`)
 - [ ] One hybrid call works and reports `on_device` or `in_cloud`
 - [ ] Decision recorded here: go, or change approach
@@ -57,15 +57,15 @@ Tracks the work to turn Atelier from a single-screen demo into a full writing wo
 - [x] Autosave with debounce, offline persistence on, save-state indicator
 - [x] Home page: continue writing, recent documents, word count
 
-## Stage 3: hybrid AI layer and Flow mode — Sat Nov 28
+## Stage 3: hybrid AI layer and Flow mode — in progress (Nov 26)
 
-- [ ] Single `ai/` module: every call goes through one router
+- [x] Single router (`src/llm/hybrid.ts`): every engine call goes through Firebase AI Logic
 - [ ] Routing policy (on-device vs cloud) by task and size, thresholds from Remote Config
 - [ ] "On-device" / "cloud" chip per request
-- [ ] On-device flows: attention picks, steering menus, realization check, focus scoring
-- [ ] Cloud flow: long continuation, with on-device fallback
+- [~] On-device flows: routed as PREFER_ON_DEVICE, currently served from cloud. **On-device (Gemini Nano) not yet tested**
+- [x] Cloud flow: long continuation (PREFER_IN_CLOUD, falls back to on-device). Verified in cloud
 - [ ] JSON-output hardening for the small model (schemas, retries)
-- [ ] Flow mode opens inside the editor: Spark flow, Keep and Discard, right panel (Context, Locks, Presets)
+- [x] Flow mode opens inside the editor (overlay), seeded with project, page title and the last 250 words; Spark portal for empty pages; Keep and Discard. Right panel (Context, Locks, Presets) not built
 - [ ] Offline behaviour: on-device features keep working, cloud features say what they need
 
 ## Stage 4: writer features and polish — Sun Nov 29
@@ -114,4 +114,5 @@ Tracks the work to turn Atelier from a single-screen demo into a full writing wo
 |---|---|
 | Nov 22 | Plan written. Decisions confirmed |
 | Nov 26 | Stages 1 and 2 built and live at https://atelier-writer-app.web.app (guest and email sign-in, projects, pages, Tiptap editor, autosave, offline cache, recent documents). Next: Stage 3, Flow mode inside the editor and the AI layer, on OpenRouter first |
+| Nov 26 | AI Logic switched on. Engine moved from the OpenRouter proxy to Firebase AI Logic hybrid inference (cloud verified end to end: seed, steer, reveal, Keep into the page). Fixed a bug of mine that dropped the first words of each continuation. Open: App Check for the hosted site (debug token must not be baked into a public bundle), on-device test, remove `api/llm.js` |
 | Nov 26 | Firebase project `atelier-writer-app` and web app created. Chrome 158 present. Local `atelier` folder had been emptied; restored from GitHub (`ecd6467`). Plan resized from 8 days to 4. Blocked on enabling Google APIs: `gcloud` is logged in as `imisidahunsi12@gmail.com`, the Firebase CLI as `abraham.dahunsi@gmail.com` |

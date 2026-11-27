@@ -1017,3 +1017,56 @@ input {
     image-set(url("/art/cursor-arrow.png") 1x, url("/art/cursor-arrow@2x.png") 2x) 1 1,
     not-allowed;
 }
+/* ---------- Embedded in the editor ---------- */
+body[data-embed] :is(.studio-header, .studio-guide, #new-story, #mode-toggle) {
+  display: none;
+}
+body[data-embed] {
+  padding-top: 24px;
+}
+#embed-bar {
+  position: fixed;
+  top: 14px;
+  right: 18px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 14px;
+  border: 2px solid var(--ink-5);
+  border-bottom-width: 4px;
+  border-radius: 16px;
+  background: var(--panel);
+  font: 700 13px "Nunito Variable", system-ui, sans-serif;
+  color: var(--ink-2);
+
+  &[hidden] {
+    display: none;
+  }
+  button {
+    padding: 7px 14px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--panel-2);
+    color: var(--ink);
+    font: 700 13px var(--display);
+    cursor: pointer;
+  }
+  #embed-keep {
+    background: var(--lime);
+    color: #0f2400;
+    box-shadow: 0 3px 0 var(--lime-deep);
+  }
+}
+#inference {
+  padding: 0 14px;
+  border-left: 2px solid var(--ink-5);
+  color: var(--ink-3);
+  font-size: 12px;
+}
+#inference[data-source="on-device"] {
+  color: var(--lime);
+}
+#inference[data-source="cloud"] {
+  color: var(--sky);
+}

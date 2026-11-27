@@ -27,11 +27,12 @@ export type StreamActivity = { isGenerating: boolean; firstChunkMs?: number; wor
 type Timing = { startedAt: number; firstChunkAt?: number; lastChunkAt?: number; words: number }
 
 /** `onChange` is called whenever the text changes and once a generation finishes. */
-export function createTextStream({ expand, complete }: TextSource, onChange: () => void) {
-  let text = ""
+/** `initialText` is text the stream starts with and never rewrites, e.g. what the writer has already written. */
+export function createTextStream({ expand, complete }: TextSource, onChange: () => void, initialText = "") {
+  let text = initialText
   let active: AbortController | undefined
   let id = 0
-  let openingWords = 0
+  let openingWords = countWords(initialText)
   let timing: Timing | undefined
   /** Waiting for the current generation to start streaming. */
   const waiters = new Set<() => void>()

@@ -23,6 +23,7 @@ import { liveRealization } from "./live-realization.ts"
 import { liveRelevance } from "./live-relevance.ts"
 import { createPointer, type Aim, type PointerTarget, type SelectionPreview, type Zone } from "./pointer.ts"
 import { wordSpans, type Span } from "./segments.ts"
+import { onInference } from "../llm/inference-stats.ts"
 import { lightTheSpark } from "./spark.ts"
 import { setPremise } from "../story/premise.ts"
 import { simulatedAttention } from "./simulated-attention.ts"
@@ -68,8 +69,22 @@ await document.fonts.load(style.font)
 const measure = document.createElement("canvas").getContext("2d")!
 measure.font = style.font
 
+/** Embedded in the editor: seeded with what the writer has written, and what they reveal can be kept. */
+const isEmbedded = new URLSearchParams(location.search).get("embed") === "1"
+const seed: { idea?: string; text?: string } | undefined = (() => {
+  if (!isEmbedded || !location.hash) return undefined
+  try {
+    return JSON.parse(decodeURIComponent(location.hash.slice(1)))
+  } catch {
+    return undefined
+  }
+})()
+const seedText = seed?.text ?? ""
+const seedWordCount = countWords(seedText)
+if (isEmbedded) document.body.dataset.embed = "1"
+
 const isLive = isLiveMode()
-const stream = createTextStream(isLive ? liveSource : simulatedSource, render)
+const stream = createTextStream(isLive ? liveSource : simulatedSource, render, seedText)
 const rail = createLeftRail(railElement)
 const connections = createConnections({ source: isLive ? liveInfluence : simulatedInfluence, onChange: refreshRail })
 const relevance = createKeywordRelevance(isLive ? liveRelevance : simulatedRelevance, refreshRail)
@@ -127,7 +142,14 @@ bindModeToggle(modeToggle, isLive)
 newStory.addEventListener("click", () => location.reload())
 /** Nothing is generated until the writer has lit the spark. */
 let isBegun = false
-lightTheSpark().then(begin)
+lightTheSpark({ idea: seed?.idea, auto: seedWordCount > 0 }).then(begin)
+if (isEmbedded) bindEmbed()
+onInference(({ onDevice, cloud, last }) => {
+  const chip = document.getElementById("inference")
+  if (!chip) return
+  chip.textContent = `${last === "on-device" ? "on-device" : "cloud"} · ${onDevice} device, ${cloud} cloud`
+  chip.dataset.source = last ?? ""
+})
 startSound()
 showSoundToggle()
 soundToggle.addEventListener("click", () => {
@@ -261,6 +283,7 @@ function report() {
   const buffer = Math.max(0, countWords(stream.text) - (shownCount ?? 0))
   handle.toggleAttribute("data-generating", activity.isGenerating)
   handle.style.setProperty("--buffer", `${Math.min(1, buffer / BUFFER_WORDS)}`)
+  if (isEmbedded) document.getElementById("embed-count")!.textContent = `${Math.max(0, (shownCount ?? 0) - seedWordCount)} new words`
   showStatus(statusElement, {
     ...activity,
     words: shownCount ?? 0,
@@ -529,6 +552,7 @@ async function begin(premise: Parameters<typeof setPremise>[0]) {
   setPremise(premise)
   isBegun = true
   scheduleTopUp()
+  if (seedWordCount) return void pullToward(0, 0, seedWordCount)
   const startedAt = performance.now()
   while (countWords(stream.text) < 6 && performance.now() - startedAt < 30000) await new Promise((resolve) => setTimeout(resolve, 80))
   for (let i = 0; i < 34 && countWords(stream.text) > (shownCount ?? 0); i++) {
@@ -545,4 +569,16 @@ function say(message: string) {
   toast.toggleAttribute("data-shown", true)
   clearTimeout(toastTimer)
   toastTimer = setTimeout(() => toast.removeAttribute("data-shown"), 5000)
+}
+/** Keep sends the words revealed past the writer's own text back to the editor; Discard or Escape closes without them. */
+function bindEmbed() {
+  const bar = document.getElementById("embed-bar")!
+  bar.hidden = false
+  const send = (message: object) => parent.postMessage(message, location.origin)
+  document.getElementById("embed-keep")!.addEventListener("click", () => {
+    const revealed = firstWords(stream.text, shownCount ?? 0).slice(seedText.length).trim()
+    send({ type: "atelier:keep", text: revealed })
+  })
+  document.getElementById("embed-discard")!.addEventListener("click", () => send({ type: "atelier:close" }))
+  addEventListener("keydown", (event) => event.key === "Escape" && send({ type: "atelier:close" }))
 }

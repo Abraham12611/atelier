@@ -882,10 +882,16 @@
       <button class="knob future" type="button" aria-label="steering knob, choosing, double click to delete"><span>…</span></button>
     </template>
     <div id="cursor" aria-hidden="true"></div>
+    <div id="embed-bar" hidden>
+      <span id="embed-count">0 new words</span>
+      <button id="embed-discard" type="button">Discard</button>
+      <button id="embed-keep" type="button">Keep</button>
+    </div>
     <div id="toast" role="status" aria-live="polite"></div>
     <footer id="tray">
       <button id="mode-toggle" type="button" aria-pressed="true" aria-label="model mode">mode<b>live</b></button>
       <output id="status" aria-live="off"></output>
+      <span id="inference" title="Where AI requests ran: on this device (private, free, offline) or in the cloud">AI: waiting</span>
       <button id="sound-toggle" type="button" aria-pressed="true" aria-label="sound">♪<b>on</b></button>
       <button id="new-story" type="button">new story</button>
     </footer>

@@ -1,6 +1,3 @@
-/**
- * The one place that decides which text backend the app talks to.
- * Currently the temporary OpenRouter proxy; the Cerebras integration swaps these exports to `./cerebras.ts` and `./decisions.ts`.
- */
-export { createDecisions, storedApiKey, storedGeminiKey, streamCompletion } from "./openrouter.ts"
+/** The one place that decides which inference backend the app talks to: Firebase AI Logic hybrid inference. */
+export { createDecisions, storedApiKey, storedGeminiKey, streamCompletion } from "./hybrid.ts"
 export type { Question } from "./decisions.ts"

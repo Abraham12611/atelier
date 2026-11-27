@@ -13,7 +13,7 @@ const STEERED_SYSTEM_PROMPT = `Continue the story. The user message may give the
 - Key phrases lead what happens next: build the continuation on them, most of all on the [bracketed] words.
 - Controls set how the next passage reads. Each is a dimension given only by its name and its poles or options, so infer from the labels what to change in the events, focus or style. A scale gives a position between two poles: at an extreme, exaggerate that pole so a reader notices it within two sentences; midway, balance both. A choice names the option to follow. Each control ends with a strength in parentheses that sets how much it shapes the passage. Strong: it dominates every sentence. Moderate: a clear influence throughout. Slight: show it in one or two touches only, such as a single sentence or image, and otherwise write the passage as the story's own events, the key phrases and the stronger controls would have it; a slight control must never set the overall character of the passage. Strength is separate from the value and replaces the exaggeration rule: exaggerate a pole only at strong. Obey every control from the first sentence to the last, but never write a label itself as words of the story.
 - With both, key phrases are the content and controls are the manner: what happens next grows out of the key phrases, whose bracketed words appear in the first two sentences, written in the controlled manner.
-- Plain text only. No title, markdown or commentary.
+- Plain text only. No title, markdown or commentary. Never write square brackets: they only mark key phrases in the input.
 - Write 120 to 300 words, never more than ${STORY_MAX_WORDS}. End on a complete sentence.
 
 EXAMPLE
@@ -43,9 +43,9 @@ async function* completeStory(prefix: string, steering: Steering, signal: AbortS
   const isSteered = steering.leads.length > 0 || steering.controls.length > 0 || premise !== undefined
   const request = isSteered ? { ...STEERED_REQUEST, user: steeredUserMessage(prefix, steering, premise && premiseBlock(premise)) } : { ...STORY_REQUEST, user: prefix }
   let head: string | undefined = ""
-  for await (const delta of streamCompletion({ ...request, apiKey, signal })) {
+  for await (const delta of streamCompletion({ ...request, apiKey, signal, task: "continuation" })) {
     if (head === undefined) {
-      yield delta
+      yield delta.replace(/[\[\]]/g, "")
       continue
     }
     head += delta
@@ -92,7 +92,8 @@ function controlLine({ dimension, position, strength }: Control) {
   return `${dimension.name}: ${valueOf({ dimension, position })}${options} (${strengthLevelOf(strength)})`
 }
 
-/** Text joins the story with one space, except the very first words. */
+/** Text joins the story with one space, except the very first words and punctuation, which attaches to the word before it. Square brackets only ever mark key phrases in the prompt, so they are never part of the story. */
 function joined(prefix: string, words: string) {
-  return prefix.trim() ? ` ` : words
+  const clean = words.replace(/[\[\]]/g, "")
+  return prefix.trim() && !/^[.,;:!?)]/.test(clean) ? " " + clean : clean
 }
